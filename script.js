@@ -1,30 +1,64 @@
-console.log("Server is live!")
-let api = 'https://01.alem.school/api/graphql-engine/v1/graphql'
-
-const getProgress = async(url) => {
-  let query = `{
-    progress(where: {user:{login:{_eq:"Kemalelee"}}}, offset:48){
-        object{
+const infoQuery = () => {
+  return  `{
+    progress(where: {user:{login: {_eq: "Kemalelee"}}, object: {type: {_eq: "project"}}, isDone: {_eq: true}}) {
+      user {
+        login
+      }
+      id
+      grade
+      object {
+        type
         name
       }
-      createdAt
-      grade
+  
+       createdAt
+
     }
   }`
+}
 
- let result = await fetch(`${api}`,{
-  method: 'POST',
-  headers: {'Content-Type' : 'application/json'},
-  body: JSON.stringify({query: query})
+
+const  fetchInfo = async(query) => {
+  const response = await fetch('https://01.alem.school/api/graphql-engine/v1/graphql', {
+    method: 'POST',
+    body: JSON.stringify({query: query})
   })
-  .then(resp => resp.json())
-  .catch(err=>{console.log('err:', err)})
-
-  return result.data
+  const convertedRes = await response.json()
+  return convertedRes.data.progress
 }
 
-const init = async () => {
-  console.log(await getProgress(api))
+
+const getInfo = async() => {
+  const query = infoQuery()
+  const response = await fetchInfo(query)
+
+  return response
 }
 
-init()
+const removeInfoDuplicates = (response) => {
+  let result = []
+  for(let i = 0; i < response.length; i++) {
+    let found = false
+
+    for(let j = 0; j < result.length; j++) {
+      if (response[i].object.name === result[j].object.name) {
+        found = true
+      }
+    }
+
+    if(!found) { 
+      result.push(response[i])
+    }
+  }
+  return result
+}
+
+
+const conf = async () => {
+  console.log(removeInfoDuplicates(await getInfo()))
+}
+
+conf()
+
+
+console.log("Server is live!")
