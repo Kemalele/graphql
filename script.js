@@ -25,25 +25,25 @@ const removeProgressDuplicates = (response) => {
       result.push(response[i])
     }
   }
+
   return result
 }
 
 const removeTransanctionDuplicates = (response) => {
   const kv = new Map()
   
-  for(let i = 0; i < response.length; i++) {
-    const name = response[i].object.name
-    const value = kv.get(name)
+  response.forEach((e) => {
+    const value = kv.get(e.object.name)
 
     if(!value) {
-      kv.set(name, response[i])
-      continue
+      kv.set(e.object.name, e)
+      return
     }
     
-    if(response[i].amount > value.amount) {
-      kv.set(name, response[i])
+    if(e.amount > value.amount) {
+      kv.set(e.object.name, e)
     }
-  }
+  })
 
   return Array.from(kv.values())
 }
@@ -94,29 +94,64 @@ const getTransanctions = async() => {
   return transactions
 }
 
+const drawDot = (x,y,text) => {
+  const svgns = "http://www.w3.org/2000/svg"
+  let xpTimeGraph = document.getElementById("xptime")
+  let dot = document.createElementNS(svgns, "circle" )
 
-const conf = async () => {
- let progress = await getProgress()
- let transactions = await getTransanctions()
+  dot.setAttributeNS(null,"cx", `${x}`)
+  dot.setAttributeNS(null,"cy", `${y}`)
+  dot.setAttributeNS(null,"r", "5")
+  dot.setAttributeNS(null,"stroke", "black")
+  dot.setAttributeNS(null,"stroke-width", "4")
+  dot.setAttributeNS(null,"fill", "blue")
 
-  // merge
-  for(i in transactions) {
-    for(j in progress) {
-      if(transactions[i].object.name === progress[j].object.name) {
-         projects.push({
-          name:      progress[j].object.name,
-          createdAt: progress[j].createdAt,
-          amount:    transactions[i].amount
-        })
-
-        break
-      }
-    }
-  }
-
- let sum = 0
- projects.forEach(e => sum += e.amount)
- console.log(sum)
+  dot.textContent = text
+  xpTimeGraph.appendChild(dot)
 }
 
-conf()
+const drawXPTime = () => {
+  const LOWEST_X = 13, LOWEST_Y = 390 
+  const FIRST_STAMP = new Date(projects[0].createdAt).getTime()
+  let sumXP = 0
+
+  // console.log(lastStamp - firstStamp)
+  projects.forEach(e => {
+    sumXP += e.amount
+    let date = new Date(e.createdAt).getTime()
+    let x = LOWEST_X + (date - FIRST_STAMP) / 100000000
+    let y = LOWEST_Y - sumXP / 1500
+    
+    drawDot(x,y, e.name)
+  })
+
+}
+
+
+const conf = async () => {
+  let progress = await getProgress()
+  let transactions = await getTransanctions()
+
+  // merge
+  transactions.forEach((t) => {
+    progress.forEach((p) => {
+      if (t.object.name === p.object.name) {
+        projects.push({
+          name:      p.object.name,
+          createdAt: p.createdAt,
+          amount:    t.amount
+        })
+        return
+      }
+    })
+  })
+
+  projects.sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt))
+  
+  drawXPTime()
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  conf()
+});
+
