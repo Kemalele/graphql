@@ -1,3 +1,4 @@
+const LOWEST_X = 13, LOWEST_Y = 390 
 let projects = []
 
 const fetchQuery = async(query) => {
@@ -94,9 +95,8 @@ const getTransanctions = async() => {
   return transactions
 }
 
-const drawDot = (x,y,text) => {
+const drawDot = (x,y,text,graph) => {
   const svgns = "http://www.w3.org/2000/svg"
-  let xpTimeGraph = document.getElementById("xptime")
   let dot = document.createElementNS(svgns, "circle" )
 
   dot.setAttributeNS(null,"cx", `${x}`)
@@ -107,26 +107,28 @@ const drawDot = (x,y,text) => {
   dot.setAttributeNS(null,"fill", "blue")
 
   dot.textContent = text
-  xpTimeGraph.appendChild(dot)
+  graph.appendChild(dot)
 }
 
 const drawXPTime = () => {
-  const LOWEST_X = 13, LOWEST_Y = 390 
-  const FIRST_STAMP = new Date(projects[0].createdAt).getTime()
+  let xpTimeGraph = document.getElementById("xptime")
   let sumXP = 0
 
-  // console.log(lastStamp - firstStamp)
   projects.forEach(e => {
+    // difference between first done and current project
+    let diff = diffInDays(e.createdAt, projects[0].createdAt)
+    let xpInKB = sumXP / 1000
     sumXP += e.amount
-    let date = new Date(e.createdAt).getTime()
-    let x = LOWEST_X + (date - FIRST_STAMP) / 100000000
-    let y = LOWEST_Y - sumXP / 1500
     
-    drawDot(x,y, e.name)
+    drawDot(LOWEST_X + diff,LOWEST_Y - xpInKB, e.name, xpTimeGraph)
   })
-
 }
 
+// returns difference in days between two timeStamps
+const diffInDays = (a,b) => {
+  let diffInTime = new Date(a) - new Date(b)
+  return diffInTime / (1000 * 3600 * 24)
+}
 
 const conf = async () => {
   let progress = await getProgress()
@@ -154,4 +156,3 @@ const conf = async () => {
 document.addEventListener("DOMContentLoaded", () => {
   conf()
 });
-
