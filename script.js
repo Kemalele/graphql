@@ -107,7 +107,33 @@ const drawDot = (x,y,text,graph) => {
   dot.setAttributeNS(null,"fill", "blue")
 
   dot.textContent = text
+  dot.id = text
+
   graph.appendChild(dot)
+}
+
+const drawDates = (graph) => {
+  const kv = new Map()
+
+  projects.forEach(e => {
+    let date = new Date(e.createdAt)
+    let year = date.getFullYear().toString().substr(-2)
+    let month = `0${date.getMonth() + 1}`
+    let monthYear = `${month}/${year}`
+
+
+    if(!kv.get(monthYear)) {
+      let circleX = document.getElementById(e.name).getBoundingClientRect().left
+      let dateElem = document.createElement("div")
+
+      dateElem.setAttribute("class", "date")
+      dateElem.innerText = monthYear
+      dateElem.style.left = Math.floor(circleX).toString() + 'px'
+
+      document.body.appendChild(dateElem)
+      kv.set(monthYear,true)
+    }
+  })
 }
 
 const drawXPTime = () => {
@@ -117,7 +143,7 @@ const drawXPTime = () => {
   projects.forEach(e => {
     // difference between first done and current project
     let diff = diffInDays(e.createdAt, projects[0].createdAt)
-    let xpInKB = sumXP / 1000
+    let xpInKB = sumXP / 1024
     sumXP += e.amount
     
     drawDot(LOWEST_X + diff,LOWEST_Y - xpInKB, e.name, xpTimeGraph)
@@ -151,6 +177,7 @@ const conf = async () => {
   projects.sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt))
   
   drawXPTime()
+  drawDates()
 }
 
 document.addEventListener("DOMContentLoaded", () => {
