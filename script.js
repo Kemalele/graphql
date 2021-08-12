@@ -133,6 +133,27 @@ const drawDates = (graph) => {
       document.body.appendChild(dateElem)
       kv.set(monthYear,true)
     }
+    })
+  }
+
+const drawXP = () => {
+  let sum = 0
+  let prev = 0
+  
+  projects.forEach(e => {
+    prev = sum
+    sum += e.amount
+
+    if (sum - prev < 10000) return
+
+    let circleY = document.getElementById(e.name).getBoundingClientRect().top
+    let xpElem = document.createElement("div")
+
+    xpElem.setAttribute("class", "xp")
+    xpElem.style.top = Math.round(circleY).toString() + 'px'
+    xpElem.innerText = sum
+
+    document.body.appendChild(xpElem)
   })
 }
 
@@ -146,7 +167,7 @@ const drawXPTime = () => {
     let xpInKB = sumXP / 1024
     sumXP += e.amount
     
-    drawDot(LOWEST_X + diff,LOWEST_Y - xpInKB, e.name, xpTimeGraph)
+    drawDot(LOWEST_X + diff, LOWEST_Y - xpInKB, e.name, xpTimeGraph)
   })
 }
 
@@ -178,6 +199,7 @@ const conf = async () => {
   
   drawXPTime()
   drawDates()
+  drawXP()
 }
 
 document.addEventListener("DOMContentLoaded", () => {
