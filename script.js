@@ -82,18 +82,18 @@ const getTransanctions = async() => {
       }
     }`
 
-  const response = await fetchQuery(query)
-  transactions.push(...response.transaction)
-  offset += LIMIT
+    const response = await fetchQuery(query)
+    transactions.push(...response.transaction)
+    offset += LIMIT
 
-  if(response.transaction.length < LIMIT) {
-    break
+    if(response.transaction.length < LIMIT)  break
   }
-}
 
   transactions = removeTransanctionDuplicates(transactions)
   return transactions
 }
+
+// const drawCircle = 
 
 const drawDot = (x,y,text,graph) => {
   const svgns = "http://www.w3.org/2000/svg"
@@ -121,9 +121,8 @@ const drawDates = (graph) => {
     let month = `0${date.getMonth() + 1}`
     let monthYear = `${month}/${year}`
 
-
     if(!kv.get(monthYear)) {
-      let circleX = document.getElementById(e.name).getBoundingClientRect().left
+      let circleX = graph.querySelector('#' + e.name).getBoundingClientRect().left
       let dateElem = document.createElement("div")
 
       dateElem.setAttribute("class", "date")
@@ -133,32 +132,46 @@ const drawDates = (graph) => {
       document.body.appendChild(dateElem)
       kv.set(monthYear,true)
     }
-    })
-  }
+  })
+}
 
-const drawXP = () => {
+const drawXP = (graph) => {
   let sum = 0
   let prev = 0
-  
+  let XP_DIFF = 10000
+  // console.log(graph.id)
   projects.forEach(e => {
     prev = sum
     sum += e.amount
 
-    if (sum - prev < 10000) return
+    if (sum - prev < XP_DIFF) return
+    // console.log()
+    let circleY = graph.querySelector('#' + e.name).getBoundingClientRect().top
+    let circleX = graph.querySelector('#' + 'vertical').getBoundingClientRect().left
 
-    let circleY = document.getElementById(e.name).getBoundingClientRect().top
     let xpElem = document.createElement("div")
-
+    // return
     xpElem.setAttribute("class", "xp")
     xpElem.style.top = Math.round(circleY).toString() + 'px'
+    xpElem.style.left = Math.round(circleX + 15).toString() + 'px'
+
     xpElem.innerText = sum
 
     document.body.appendChild(xpElem)
   })
+  
 }
 
-const drawXPTime = () => {
-  let xpTimeGraph = document.getElementById("xptime")
+const drawXPProject = () => {
+  let xpTimeProject = document.getElementById("xpproject")
+  console.log('here')
+
+  drawDots(xpTimeProject)
+  drawXP(xpTimeProject)
+  drawDates(xpTimeProject)
+}
+
+const drawDots = (graph) => {
   let sumXP = 0
 
   projects.forEach(e => {
@@ -167,8 +180,16 @@ const drawXPTime = () => {
     let xpInKB = sumXP / 1024
     sumXP += e.amount
     
-    drawDot(LOWEST_X + diff, LOWEST_Y - xpInKB, e.name, xpTimeGraph)
+    drawDot(LOWEST_X + diff, LOWEST_Y - xpInKB, e.name, graph)
   })
+}
+
+const drawXPTime = () => {
+  let xpTimeGraph = document.getElementById("xptime")
+  
+  drawDots(xpTimeGraph)
+  drawXP(xpTimeGraph)
+  drawDates(xpTimeGraph)
 }
 
 // returns difference in days between two timeStamps
@@ -198,8 +219,7 @@ const conf = async () => {
   projects.sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt))
   
   drawXPTime()
-  drawDates()
-  drawXP()
+  drawXPProject()
 }
 
 document.addEventListener("DOMContentLoaded", () => {
